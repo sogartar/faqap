@@ -18,6 +18,6 @@ class FaqapTest(TestCase):
         )
         correct_permutation = [1, 3, 2, 0]
         P = permutation_matrix(inverse_permutation(correct_permutation))
-        D = P.transpose() @ F @ P
-        solution_permutation = minimize(D, F, 1).x
+        D = P @ F @ P.transpose()
+        solution_permutation = minimize(D, -F, 1).x
         np.testing.assert_array_equal(correct_permutation, solution_permutation)

@@ -10,8 +10,8 @@ from faqap.permutation import (
 
 # P is a permutation_matrix
 def objective_with_mat(D, F, P):
-    v = np.linalg.norm(F - P.transpose() @ D @ P)
-    return v * v
+    A = P @ D @ P.transpose()
+    return np.tensordot(F, A, axes=2)
 
 
 def objective(D, F, permutation):
@@ -38,8 +38,8 @@ class TaylorExpansionMinimizer:
         return perm_mat
 
 
-# Computes f(P) = <F, PDP^T>_F and its gradient.
-# Note that f(P) is derived from |F - PDP^T|^2
+# Computes f(P) = <F, PDP^T> and its gradient.
+# Note that f(P) is derived from |F + PDP^T|^2
 # with terms dropped that are independent of P.
 class Qap:
     def __init__(self, D, F):
@@ -47,11 +47,10 @@ class Qap:
         self.F = F
 
     def __call__(self, P):
-        A = P.transpose() @ self.D @ P
-        return -np.tensordot(self.F, A, axes=2)
+        return objective_with_mat(D=self.D, F=self.F, P=P)
 
     def gradient(self, P):
-        return -(self.D @ P @ self.F.transpose() + self.D.transpose() @ P @ self.F)
+        return self.F.transpose() @ P @ self.D + self.F @ P @ self.D.transpose()
 
 
 class LinearCombinationMinimizer:
@@ -62,9 +61,9 @@ class LinearCombinationMinimizer:
 
     def __call__(self, X, Y):
         YmX = Y - X
-        YmXD = YmX.transpose() @ self.D
-        A = YmXD @ YmX
-        a = -np.tensordot(self.F, A, axes=2)
+        YmXD = YmX @ self.D
+        A = YmXD @ YmX.transpose()
+        a = np.tensordot(self.F, A, axes=2)
 
         if a < 0:
             obj_X = self.qap(X)
@@ -73,8 +72,8 @@ class LinearCombinationMinimizer:
         if a == 0:
             return (0, X, self.qap(X))
 
-        B = YmXD @ X + X.transpose() @ self.D @ YmX
-        b = -np.inner(self.F, B)
+        B = YmXD @ X.transpose() + X @ self.D @ YmX.transpose()
+        b = np.inner(self.F, B)
         alpha = np.clip(-b / (2 * a), 0, 1)
         Z = alpha * YmX + X
         return (alpha, Z, self.qap(Z))
@@ -125,6 +124,10 @@ def minimize_relaxed(
     return res
 
 
+# Minimizes f(P) = <F, PDP^T>, over P, which is a permutation matrix.
+# <., .> is the Frobenius inner product.
+# Returns a scipy.optimize.OptimizeResult object with members fun and x.
+# x is the argument that minimizes f and fun is f(x).
 def minimize(D, F, descents_count=None):
     n = len(D)
     if descents_count is None:
