@@ -1,4 +1,4 @@
-# Fast Approximate Quadratic Assignment Problem
+# Fast Approximate Quadratic Assignment Problem Solver
 
 This is a Python implementation of an algorithm for approximately solving quadratic
 assignment problems described in
