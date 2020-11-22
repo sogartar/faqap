@@ -1,5 +1,5 @@
 from faqap import minimize
-from unittest import TestCase
+from unittest import TestCase, main
 from faqap.permutation import permutation_matrix
 from faqap.test.permutation import inverse_permutation
 from faqap.fw import objective
@@ -85,3 +85,7 @@ class FaqapTest(TestCase):
 
         np.testing.assert_almost_equal(expected_objective, solution.fun, decimal=5)
         np.testing.assert_array_equal(expected_permutation, solution.x)
+
+
+if __name__ == "__main__":
+    main()
