@@ -60,5 +60,6 @@ solution permutation = [3 2 1 0]
 ```
 
 ## Dependencies
-* numpy
-* scipy
+* Python (>=3.5)
+* NumPy (>=1.10)
+* SciPy (>=1.4)
