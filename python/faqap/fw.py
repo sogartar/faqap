@@ -80,7 +80,7 @@ class LinearCombinationMinimizer:
 
 
 def minimize_relaxed(
-    D, F, projector, x0_generator, count=1, maxiter=None, tol=1e-5, verbose=True
+    D, F, projector, x0_generator, count=1, maxiter=None, tol=1e-5, verbose=False
 ):
     qap = Qap(D, F)
     res = None
@@ -95,11 +95,7 @@ def minimize_relaxed(
             y = projector(grad)
             (_, x_new, fun_new) = linear_comb_opt(x, y)
 
-            if (
-                (maxiter is not None and maxiter <= j)
-                or np.linalg.norm(x - x_new) < tol
-                or abs(fun - fun_new) < tol
-            ):
+            if (maxiter is not None and maxiter <= j) or abs(fun - fun_new) < tol:
 
                 if res is None or fun_new < res.fun:
                     if res is None:
@@ -124,21 +120,48 @@ def minimize_relaxed(
     return res
 
 
-# Minimizes f(P) = <F, PDP^T>, over P, which is a permutation matrix.
-# <., .> is the Frobenius inner product.
-# Returns a scipy.optimize.OptimizeResult object with members fun and x.
-# x is the argument that minimizes f and fun is f(x).
-# the permutation x is returned in line notation.
-def minimize(D, F, descents_count=None):
+def minimize(
+    D, F, x0_generator=None, descents_count=1, maxiter=None, tol=1e-5, verbose=False
+):
+    """
+    Minimizes f(P) = <F, PDP^T>, over the set of permutation matrices.
+    <., .> is the Frobenius inner product.
+    This implementation uses the Frank–Wolfe algorithm.
+
+    Parameters
+    ----------
+    D, F : square numpy matrices of the same size.
+        By convention D is the distance and F is the flow in the factory assignment
+        problem.
+    x0_generator : generator for initial search points. It is a callable,
+        that returns doubly stochastic matrices. The default generator picks random
+        points (C + R)/2, where C is the center of the Birkhoff polytope and
+        R is random matrix from it.
+    descents_count : number of searches to perform from an initial point.
+    maxiter : The maximum number of descent steps to perform. If None,
+        there is no limit.
+    tol : tolerance for the decrease of the objective. If the objective decreases
+        with less than tol in one descent step, this local search is terminated.
+    verbose : When True, prints results during the search.
+
+    Returns
+    -------
+    scipy.optimize.OptimizeResult object with members fun and x.
+    x is the argument that minimizes f and fun is f(x).
+    the permutation x is returned in line notation.
+    """
     n = len(D)
-    if descents_count is None:
-        descents_count = n
+    if x0_generator is None:
+        x0_generator = SearchOriginGenerator(n, D.dtype)
     relaxed_sol = minimize_relaxed(
         D,
         F,
         projector=TaylorExpansionMinimizer(),
-        x0_generator=SearchOriginGenerator(n, D.dtype),
+        x0_generator=x0_generator,
         count=descents_count,
+        maxiter=maxiter,
+        tol=tol,
+        verbose=verbose,
     )
 
     res = OptimizeResult()
