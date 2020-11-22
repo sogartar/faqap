@@ -73,7 +73,7 @@ class LinearCombinationMinimizer:
             return (0, X, self.qap(X))
 
         B = YmXD @ X.transpose() + X @ self.D @ YmX.transpose()
-        b = np.inner(self.F, B)
+        b = np.tensordot(self.F, B, axes=2)
         alpha = np.clip(-b / (2 * a), 0, 1)
         Z = alpha * YmX + X
         return (alpha, Z, self.qap(Z))
@@ -118,7 +118,7 @@ def minimize_relaxed(
         if verbose and i % (np.maximum(1, count // 100)) == 0:
             print(
                 "Frak-Wolfe QP progress = %.2f%%. Objective = %.3f."
-                % (100.0 * i / count, res.fun)
+                % (100.0 * (i + 1) / count, res.fun)
             )
 
     return res
@@ -128,6 +128,7 @@ def minimize_relaxed(
 # <., .> is the Frobenius inner product.
 # Returns a scipy.optimize.OptimizeResult object with members fun and x.
 # x is the argument that minimizes f and fun is f(x).
+# the permutation x is returned in line notation.
 def minimize(D, F, descents_count=None):
     n = len(D)
     if descents_count is None:
