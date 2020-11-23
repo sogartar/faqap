@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from faqap import minimize
 from unittest import TestCase, main
 from faqap.permutation import permutation_matrix

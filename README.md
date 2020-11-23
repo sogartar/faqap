@@ -59,6 +59,12 @@ Output
 solution permutation = [3 2 1 0]
 ```
 
+## Install
+
+```
+pip install faqap
+```
+
 ## Dependencies
 * Python (>=3.5)
 * NumPy (>=1.10)

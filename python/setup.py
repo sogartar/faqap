@@ -1,15 +1,16 @@
-from setuptools import setup
+#!/usr/bin/env python3
 
-# read the contents of README.md
+from setuptools import setup
 from os import path
 
+# read the contents of README.md
 this_directory = path.abspath(path.dirname(__file__))
 with open(path.join(this_directory, "../README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
     name="faqap",
-    version="0.1.1",
+    version="0.2.0",
     description="Algorithm for approximately solving quadratic assignment problems.",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -18,6 +19,10 @@ setup(
     author_email="sogartary@yahoo.com",
     license="Unlicense",
     packages=["faqap", "faqap.test"],
+    package_dir={
+        "faqap": path.join(this_directory, "faqap"),
+        "faqap.test": path.join(this_directory, "faqap", "test"),
+    },
     classifiers=[
         "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: The Unlicense (Unlicense)",
