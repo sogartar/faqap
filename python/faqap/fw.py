@@ -111,7 +111,9 @@ def minimize_relaxed(
         if maxiter is not None and maxiter <= j:
             break
 
-        if verbose and i % (np.maximum(1, count // 100)) == 0:
+        if (verbose >= 3 and i % (np.maximum(1, count // 100)) == 0) or (
+            verbose >= 2 and i % (np.maximum(10, count // 10)) == 0
+        ):
             print(
                 "Frak-Wolfe QP progress = %.2f%%. Objective = %.3f."
                 % (100.0 * (i + 1) / count, res.fun)
@@ -121,7 +123,7 @@ def minimize_relaxed(
 
 
 def minimize(
-    D, F, x0_generator=None, descents_count=1, maxiter=None, tol=1e-5, verbose=False
+    D, F, x0_generator=None, descents_count=1, maxiter=None, tol=1e-5, verbose=0
 ):
     """
     Minimizes f(P) = <F, PDP^T>, over the set of permutation matrices.
@@ -167,4 +169,6 @@ def minimize(
     res = OptimizeResult()
     res.x = project_doubly_stochastic_matrix_onto_permutations(relaxed_sol.x)
     res.fun = objective(D, F, res.x)
+    if verbose >= 1:
+        print("Frak-Wolfe QP objective = %.3f." % (res.fun))
     return res

@@ -59,7 +59,7 @@ Output
 solution permutation = [3 2 1 0]
 ```
 
-## Install
+## Installation
 
 ```
 pip install faqap
