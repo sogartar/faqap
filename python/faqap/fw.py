@@ -6,16 +6,36 @@ from faqap.permutation import (
     permutation_matrix,
     project_doubly_stochastic_matrix_onto_permutations,
 )
+from faqap.torch import has_torch
+
+if has_torch:
+    import torch
+    from faqap.torch import (
+        TorchifiedSearchOriginGenerator,
+        TorchifiedProjector,
+        torch_dtype_to_numpy,
+    )
 
 
 # P is a permutation_matrix
 def objective_with_mat(D, F, P):
-    A = P @ D @ P.transpose()
-    return np.tensordot(F, A, axes=2)
+    if has_torch and isinstance(D, torch.Tensor):
+        A = P @ D @ P.transpose(0, 1)
+        return torch.tensordot(F, A, dims=2)
+    else:
+        A = P @ D @ P.transpose()
+        return np.tensordot(F, A, axes=2)
 
 
 def objective(D, F, permutation):
-    P = permutation_matrix(permutation, dtype=D.dtype)
+    is_torch = has_torch and isinstance(D, torch.Tensor)
+    if is_torch:
+        numpy_dtype = torch_dtype_to_numpy[D.dtype]
+    else:
+        numpy_dtype = D.dtype
+    P = permutation_matrix(permutation, dtype=numpy_dtype)
+    if is_torch:
+        P = torch.tensor(P).to(D.device)
     return objective_with_mat(D=D, F=F, P=P)
 
 
@@ -50,7 +70,12 @@ class Qap:
         return objective_with_mat(D=self.D, F=self.F, P=P)
 
     def gradient(self, P):
-        return self.F.transpose() @ P @ self.D + self.F @ P @ self.D.transpose()
+        if has_torch and isinstance(self.D, torch.Tensor):
+            return self.F.transpose(0, 1) @ P @ self.D + self.F @ P @ self.D.transpose(
+                0, 1
+            )
+        else:
+            return self.F.transpose() @ P @ self.D + self.F @ P @ self.D.transpose()
 
 
 class LinearCombinationMinimizer:
@@ -60,10 +85,18 @@ class LinearCombinationMinimizer:
         self.qap = Qap(D, F)
 
     def __call__(self, X, Y):
+        is_torch = has_torch and isinstance(self.D, torch.Tensor)
+
         YmX = Y - X
         YmXD = YmX @ self.D
-        A = YmXD @ YmX.transpose()
-        a = np.tensordot(self.F, A, axes=2)
+        if is_torch:
+            A = YmXD @ YmX.transpose(0, 1)
+        else:
+            A = YmXD @ YmX.transpose()
+        if is_torch:
+            a = torch.tensordot(self.F, A, dims=2)
+        else:
+            a = np.tensordot(self.F, A, axes=2)
 
         if a < 0:
             obj_X = self.qap(X)
@@ -72,8 +105,12 @@ class LinearCombinationMinimizer:
         if a == 0:
             return (0, X, self.qap(X))
 
-        B = YmXD @ X.transpose() + X @ self.D @ YmX.transpose()
-        b = np.tensordot(self.F, B, axes=2)
+        if is_torch:
+            B = YmXD @ X.transpose(0, 1) + X @ self.D @ YmX.transpose(0, 1)
+            b = torch.tensordot(self.F, B, dims=2)
+        else:
+            B = YmXD @ X.transpose() + X @ self.D @ YmX.transpose()
+            b = np.tensordot(self.F, B, axes=2)
         alpha = np.clip(-b / (2 * a), 0, 1)
         Z = alpha * YmX + X
         return (alpha, Z, self.qap(Z))
@@ -86,10 +123,16 @@ def minimize_relaxed(
     res = None
     linear_comb_opt = LinearCombinationMinimizer(D, F)
 
+    is_torch = has_torch and isinstance(D, torch.Tensor)
+    if is_torch:
+        numpy_dtype = torch_dtype_to_numpy[D.dtype]
+    else:
+        numpy_dtype = D.dtype
+
     j = 0
     for i in range(count):
         x = x0_generator()
-        fun = np.finfo(D.dtype).max
+        fun = np.finfo(numpy_dtype).max
         while True:
             grad = qap.gradient(x)
             y = projector(grad)
@@ -153,12 +196,26 @@ def minimize(
     the permutation x is returned in line notation.
     """
     n = len(D)
+
+    is_torch = has_torch and isinstance(D, torch.Tensor)
+    if is_torch:
+        numpy_dtype = torch_dtype_to_numpy[D.dtype]
+    else:
+        numpy_dtype = D.dtype
     if x0_generator is None:
-        x0_generator = SearchOriginGenerator(n, D.dtype)
+        x0_generator = SearchOriginGenerator(n, numpy_dtype)
+        if is_torch:
+            x0_generator = TorchifiedSearchOriginGenerator(
+                x0_generator, device=D.device
+            )
+    projector = TaylorExpansionMinimizer()
+    if is_torch:
+        projector = TorchifiedProjector(projector)
+
     relaxed_sol = minimize_relaxed(
         D,
         F,
-        projector=TaylorExpansionMinimizer(),
+        projector=projector,
         x0_generator=x0_generator,
         count=descents_count,
         maxiter=maxiter,

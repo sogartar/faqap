@@ -31,5 +31,6 @@ setup(
         "Programming Language :: Python :: 3",
     ],
     install_requires=["numpy>=1.10", "scipy>=1.4"],
+    extras_require={"torch": ["torch"]},
     python_requires=">=3.5",
 )
