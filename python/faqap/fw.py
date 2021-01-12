@@ -21,7 +21,7 @@ if has_torch:
 def objective_with_mat(D, F, P):
     if has_torch and isinstance(D, torch.Tensor):
         A = P @ D @ P.transpose(0, 1)
-        return torch.tensordot(F, A, dims=2)
+        return torch.tensordot(F, A, dims=2).cpu()
     else:
         A = P @ D @ P.transpose()
         return np.tensordot(F, A, axes=2)
@@ -94,7 +94,7 @@ class LinearCombinationMinimizer:
         else:
             A = YmXD @ YmX.transpose()
         if is_torch:
-            a = torch.tensordot(self.F, A, dims=2)
+            a = torch.tensordot(self.F, A, dims=2).cpu()
         else:
             a = np.tensordot(self.F, A, axes=2)
 
@@ -107,7 +107,7 @@ class LinearCombinationMinimizer:
 
         if is_torch:
             B = YmXD @ X.transpose(0, 1) + X @ self.D @ YmX.transpose(0, 1)
-            b = torch.tensordot(self.F, B, dims=2)
+            b = torch.tensordot(self.F, B, dims=2).cpu()
         else:
             B = YmXD @ X.transpose() + X @ self.D @ YmX.transpose()
             b = np.tensordot(self.F, B, axes=2)
@@ -224,7 +224,10 @@ def minimize(
     )
 
     res = OptimizeResult()
-    res.x = project_doubly_stochastic_matrix_onto_permutations(relaxed_sol.x)
+    if is_torch:
+        res.x = project_doubly_stochastic_matrix_onto_permutations(relaxed_sol.x.cpu())
+    else:
+        res.x = project_doubly_stochastic_matrix_onto_permutations(relaxed_sol.x)
     res.fun = objective(D, F, res.x)
     if verbose >= 1:
         print("Frak-Wolfe QP objective = %.3f." % (res.fun))
