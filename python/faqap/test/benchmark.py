@@ -21,61 +21,103 @@ class FaqapTorchBenchmark(TestCase):
         TestCase.setUp(self)
         self.init_random_seed()
 
-    def test_benchmark_cuda_128(self):
+    def test_benchmark_torch_cuda_128(self):
         n = 128
+        print("Running torch cuda benchmark %dx%d" % (n, n))
 
-        print("Running cuda benchmark 128x128")
         device = torch.device("cuda")
-        D = torch.rand(n, n, dtype=torch.float32, device=device)
-        F = torch.rand(n, n, dtype=torch.float32, device=device)
+        D = torch.rand(n, n, dtype=torch.float32).to(device)
+        F = torch.rand(n, n, dtype=torch.float32).to(device)
+
+        # Force lazy init
+        minimize(D=D, F=F)
 
         start = timeit.default_timer()
-        minimize(D=D, F=F, descents_count=10, verbose=2)
+        minimize(D=D, F=F, descents_count=10)
         stop = timeit.default_timer()
         execution_time = stop - start
-        print("Execution time (s) = ", execution_time)
+        print("Execution time (s) =", execution_time)
 
-    def test_benchmark_cuda_256(self):
+    def test_benchmark_torch_cuda_256(self):
         n = 256
+        print("Running torch cuda benchmark %dx%d" % (n, n))
 
-        print("Running cuda benchmark 256x256")
         device = torch.device("cuda")
-        D = torch.rand(n, n, dtype=torch.float32, device=device)
-        F = torch.rand(n, n, dtype=torch.float32, device=device)
+        D = torch.rand(n, n, dtype=torch.float32).to(device)
+        F = torch.rand(n, n, dtype=torch.float32).to(device)
+
+        # Force lazy init
+        minimize(D=D, F=F)
 
         start = timeit.default_timer()
-        minimize(D=D, F=F, descents_count=10, verbose=2)
+        minimize(D=D, F=F, descents_count=10)
         stop = timeit.default_timer()
         execution_time = stop - start
-        print("Execution time (s) = ", execution_time)
+        print("Execution time (s) =", execution_time)
+
+    def test_benchmark_torch_cpu_128(self):
+        n = 128
+        print("Running torch cpu benchmark %dx%d" % (n, n))
+
+        D = torch.rand(n, n, dtype=torch.float32)
+        F = torch.rand(n, n, dtype=torch.float32)
+
+        # Force lazy init
+        minimize(D=D, F=F)
+
+        start = timeit.default_timer()
+        minimize(D=D, F=F, descents_count=10)
+        stop = timeit.default_timer()
+        execution_time = stop - start
+        print("Execution time (s) =", execution_time)
+
+    def test_benchmark_torch_cpu_256(self):
+        n = 256
+        print("Running torch cpu benchmark %dx%d" % (n, n))
+
+        D = torch.rand(n, n, dtype=torch.float32)
+        F = torch.rand(n, n, dtype=torch.float32)
+
+        # Force lazy init
+        minimize(D=D, F=F)
+
+        start = timeit.default_timer()
+        minimize(D=D, F=F, descents_count=10)
+        stop = timeit.default_timer()
+        execution_time = stop - start
+        print("Execution time (s) =", execution_time)
 
     def test_benchmark_numpy_128(self):
         n = 128
+        print("Running torch cuda benchmark %dx%d" % (n, n))
 
-        print("Running numpy benchmark 128x128")
-        device = torch.device("cpu")
-        D = torch.rand(n, n, dtype=torch.float32, device=device).numpy()
-        F = torch.rand(n, n, dtype=torch.float32, device=device).numpy()
+        D = torch.rand(n, n, dtype=torch.float32).numpy()
+        F = torch.rand(n, n, dtype=torch.float32).numpy()
+
+        # Force lazy init
+        minimize(D=D, F=F)
 
         start = timeit.default_timer()
-        minimize(D=D, F=F, descents_count=10, verbose=2)
+        minimize(D=D, F=F, descents_count=10)
         stop = timeit.default_timer()
         execution_time = stop - start
-        print("Execution time (s) = ", execution_time)
+        print("Execution time (s) =", execution_time)
 
     def test_benchmark_numpy_256(self):
         n = 256
+        print("Running torch cuda benchmark %dx%d" % (n, n))
 
-        print("Running numpy benchmark 256x256")
-        device = torch.device("cpu")
-        D = torch.rand(n, n, dtype=torch.float32, device=device).numpy()
-        F = torch.rand(n, n, dtype=torch.float32, device=device).numpy()
+        D = torch.rand(n, n, dtype=torch.float32).numpy()
+        F = torch.rand(n, n, dtype=torch.float32).numpy()
+
+        # Force lazy init
+        minimize(D=D, F=F)
 
         start = timeit.default_timer()
-        minimize(D=D, F=F, descents_count=10, verbose=2)
+        minimize(D=D, F=F, descents_count=10)
         stop = timeit.default_timer()
         execution_time = stop - start
-        print("Execution time (s) = ", execution_time)
+        print("Execution time (s) =", execution_time)
 
 
 if __name__ == "__main__":

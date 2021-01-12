@@ -107,8 +107,15 @@ class FaqapTorchTest(TestCase):
         solution_torch_cuda = minimize(
             D=D.to(device_cuda), F=F.to(device_cuda), descents_count=10
         )
+
         np.testing.assert_array_equal(solution_numpy.x, solution_torch_cpu.x)
+        np.testing.assert_allclose(
+            solution_numpy.fun, solution_torch_cpu.fun, rtol=1e-05
+        )
         np.testing.assert_array_equal(solution_numpy.x, solution_torch_cuda.x)
+        np.testing.assert_allclose(
+            solution_numpy.fun, solution_torch_cuda.fun, rtol=1e-05
+        )
 
 
 if __name__ == "__main__":

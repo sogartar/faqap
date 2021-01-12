@@ -59,8 +59,24 @@ Output
 solution permutation = [3 2 1 0]
 ```
 
-## Installation
 
+### GPU Support
+GPU support is enabled through Torch. It is an optional dependency.
+In order to use the GPU you must pass Torch tensors that are on the CUDA device.
+If you pass CPU tensors the GPU will not be used.
+
+Note that linear sum assignment, which is a part of the algorithm, is done on
+the CPU though SciPy.
+On a system with GPU GeForce RTX 2080 SUPER and
+CPU AMD Ryzen Threadripper 2920X (single thread at 3.5 - 4.3 GHz)
+for a float32, 128x128 sized problem linear sum assignment takes ~60% of the
+execution time.
+It may be possible to move that part on the GPU as well, but currently
+there are no good off-the-shelf GPU implementations for that.
+It is also unclear if there will be any significant speedup.
+
+
+## Installation
 ```
 pip install faqap
 ```
@@ -69,3 +85,4 @@ pip install faqap
 * Python (>=3.5)
 * NumPy (>=1.10)
 * SciPy (>=1.4)
+* Torch (optional)
