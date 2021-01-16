@@ -69,7 +69,7 @@ Note that linear sum assignment, which is a part of the algorithm, is done on
 the CPU though SciPy.
 On a system with GPU GeForce RTX 2080 SUPER and
 CPU AMD Ryzen Threadripper 2920X (single thread at 3.5 - 4.3 GHz)
-for a float32, 128x128 sized problem linear sum assignment takes ~60% of the
+for a float32, 128 sized problem linear sum assignment takes ~60% of the
 execution time.
 It may be possible to move that part on the GPU as well, but currently
 there are no good off-the-shelf GPU implementations for that.
