@@ -20,7 +20,7 @@ if has_torch:
             self.device = device
 
         def __call__(self):
-            return torch.tensor(self.generator()).to(self.device)
+            return torch.as_tensor(self.generator()).to(self.device)
 
     class TorchifiedProjector:
         def __init__(self, projector):
@@ -28,4 +28,4 @@ if has_torch:
 
         def __call__(self, gradient):
             perm_mat = self.projector(gradient.cpu().numpy())
-            return torch.tensor(perm_mat).to(gradient.device)
+            return torch.as_tensor(perm_mat).to(gradient.device)

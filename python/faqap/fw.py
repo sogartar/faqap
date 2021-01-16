@@ -35,7 +35,7 @@ def objective(D, F, permutation):
         numpy_dtype = D.dtype
     P = permutation_matrix(permutation, dtype=numpy_dtype)
     if is_torch:
-        P = torch.tensor(P).to(D.device)
+        P = torch.as_tensor(P).to(D.device)
     return objective_with_mat(D=D, F=F, P=P)
 
 
