@@ -19,11 +19,10 @@ if has_torch:
 
 # P is a permutation_matrix
 def objective_with_mat(D, F, P):
+    A = P @ D @ P.T
     if has_torch and isinstance(D, torch.Tensor):
-        A = P @ D @ P.transpose(0, 1)
         return torch.tensordot(F, A, dims=2).cpu()
     else:
-        A = P @ D @ P.transpose()
         return np.tensordot(F, A, axes=2)
 
 
@@ -70,12 +69,7 @@ class Qap:
         return objective_with_mat(D=self.D, F=self.F, P=P)
 
     def gradient(self, P):
-        if has_torch and isinstance(self.D, torch.Tensor):
-            return self.F.transpose(0, 1) @ P @ self.D + self.F @ P @ self.D.transpose(
-                0, 1
-            )
-        else:
-            return self.F.transpose() @ P @ self.D + self.F @ P @ self.D.transpose()
+        return self.F.T @ P @ self.D + self.F @ P @ self.D.T
 
 
 class LinearCombinationMinimizer:
@@ -89,10 +83,7 @@ class LinearCombinationMinimizer:
 
         YmX = Y - X
         YmXD = YmX @ self.D
-        if is_torch:
-            A = YmXD @ YmX.transpose(0, 1)
-        else:
-            A = YmXD @ YmX.transpose()
+        A = YmXD @ YmX.T
         if is_torch:
             a = torch.tensordot(self.F, A, dims=2).cpu()
         else:
@@ -105,11 +96,10 @@ class LinearCombinationMinimizer:
         if a == 0:
             return (0, X, self.qap(X))
 
+        B = YmXD @ X.T + X @ self.D @ YmX.T
         if is_torch:
-            B = YmXD @ X.transpose(0, 1) + X @ self.D @ YmX.transpose(0, 1)
             b = torch.tensordot(self.F, B, dims=2).cpu()
         else:
-            B = YmXD @ X.transpose() + X @ self.D @ YmX.transpose()
             b = np.tensordot(self.F, B, axes=2)
         alpha = np.clip(-b / (2 * a), 0, 1)
         Z = alpha * YmX + X
