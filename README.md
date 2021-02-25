@@ -60,7 +60,7 @@ solution permutation = [3 2 1 0]
 ```
 
 
-### GPU Support
+## GPU Support
 GPU support is enabled through Torch. It is an optional dependency.
 In order to use the GPU you must pass Torch tensors that are on the CUDA device.
 If you pass CPU tensors the GPU will not be used.
